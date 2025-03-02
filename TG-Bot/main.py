@@ -19,6 +19,7 @@ import asyncio
 import logging
 import sqlite3
 import pyautogui
+from webdriver_manager.chrome import ChromeDriverManager  # Автоматическая установка драйвера
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -27,7 +28,6 @@ logger = logging.getLogger(__name__)
 # Конфигурация
 TELEGRAM_TOKEN = '7889127081:AAFfxysWqHdHRioKcNSAjvbnCcbzFp44ryk'  # Ваш токен Telegram бота
 CHROME_PROFILE_PATH = r'C:\Users\WoW\AppData\Local\Google\Chrome\SeleniumProfile'  # Уникальный профиль
-CHROMEDRIVER_PATH = r'C:\Windows\chromedriver.exe'  # Путь к chromedriver.exe
 SAVE_FOLDER = "telegram_stickers"  # Папка для сохранения стикеров
 WHATSAPP_CONTACT = "sd"  # Имя контакта/группы в WhatsApp
 DATABASE_PATH = "stickers.db"  # Путь к базе данных
@@ -51,7 +51,8 @@ def init_whatsapp_driver():
     chrome_options.add_argument("--remote-debugging-port=9222")
     chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
 
-    service = Service(executable_path=CHROMEDRIVER_PATH)
+    # Используем webdriver_manager для автоматической загрузки драйвера
+    service = Service(ChromeDriverManager().install())
     driver = webdriver.Chrome(service=service, options=chrome_options)
     return driver
 
@@ -100,7 +101,6 @@ def send_to_whatsapp(image_path):
             time.sleep(20)  # Ожидание сканирования QR-кода
 
         # Поиск контакта
-        # Поиск контакта
         search_box = WebDriverWait(driver, 30).until(
             EC.presence_of_element_located((By.XPATH, '//div[@contenteditable="true"][@data-tab="3"]'))
         )
@@ -117,7 +117,7 @@ def send_to_whatsapp(image_path):
 
         # Загрузка изображения
         image_input = driver.find_element(By.XPATH, '//input[@accept="image/*,video/mp4,video/3gpp,video/quicktime"]')
-        image_input.send_keys(image_path)
+        image_input.send_keys(os.path.abspath(image_path))
         time.sleep(2)
 
         # Отправка стикера
